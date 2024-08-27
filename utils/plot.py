@@ -50,6 +50,7 @@ def plot_time_range(df: pd.DataFrame, x: str) -> None:
                   x=x,
                   y='PJME_MW',
                   legend=False,
+
                   hue=x,
                   ax=ax)
     ax.set_title(f'Power Use MW by {x.capitalize()}')

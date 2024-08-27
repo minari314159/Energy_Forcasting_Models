@@ -64,3 +64,20 @@ def create_cat_features(df: pd.DataFrame):
     df = df[['weekday', 'season']]
 
     return df
+
+
+def add_lags(df: pd.DataFrame, target_map: dict) -> pd.DataFrame:
+    """ 
+    Add lag features to the DataFrame based on the target_map
+
+    Args:
+        df (pd.DataFrame): Input DataFrame with a DatetimeIndex.
+        target_map (dict): Dictionary mapping dates to target values.
+
+    Returns:
+        pd.DataFrame: DataFrame with additional lag features.
+    """
+    df['lag1'] = (df.index - pd.Timedelta(days=364)).map(target_map)
+    df['lag2'] = (df.index - pd.Timedelta(days=728)).map(target_map)
+    df['lag3'] = (df.index - pd.Timedelta(days=1092)).map(target_map)
+    return df
