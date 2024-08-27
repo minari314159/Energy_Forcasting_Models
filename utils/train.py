@@ -1,3 +1,4 @@
+from pyexpat import model
 import xgboost as xgb
 import pandas as pd
 import numpy as np
@@ -35,7 +36,7 @@ def cross_validation(df: pd.DataFrame) -> None:
         y_test = test[TARGET]
 
         model_xgb = xgb.XGBRegressor(base_score=0.5, booster='gbtree', n_estimators=1000, early_stopping_rounds=50, objective="reg:linear", max_depth=6,
-                                     learning_rate=0.001, min_child_weight=1, subsample=0.8, colsample_bytree=0.8, gamma=0, reg_alpha=0, reg_lambda=1, random_state=42)
+                                     learning_rate=0.01, min_child_weight=1, subsample=0.8, colsample_bytree=0.8, gamma=0, reg_alpha=0, reg_lambda=1, random_state=42)
         model_xgb.fit(X_train, y_train,
                       eval_set=[(X_train, y_train), (X_test, y_test)],
                       verbose=100)
@@ -45,4 +46,4 @@ def cross_validation(df: pd.DataFrame) -> None:
         score = np.sqrt(mean_squared_error(y_test, y_pred))
         scores.append(score)
 
-        return preds, scores
+        return preds, scores, model_xgb
