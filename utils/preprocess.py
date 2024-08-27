@@ -56,9 +56,7 @@ def create_cat_features(df: pd.DataFrame):
                                             'Thursday', 'Friday',
                                             'Saturday', 'Sunday'],
                                 ordered=True)
-
-    df['weekday'] = df['date'].dt.day_name()
-    df['weekday'] = df['weekday'].astype(cat_type)
+    df['weekday'] = df.index.day_name().astype(cat_type)
     df['date_offset'] = (df.date.dt.month*100 + df.date.dt.day - 320) % 1300
     df['season'] = pd.cut(df['date_offset'], [0, 300, 602, 900, 1300],
                           labels=['Spring', 'Summer', 'Autumn', 'Winter']

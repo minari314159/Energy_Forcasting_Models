@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import iqr
+from scipy.stats import iqr, zscore
 
-def mean_absolute_percentage_error(y_true, y_pred):
+
+def mean_absolute_percentage_error(y_true: pd.Series, y_pred: pd.Series) -> float:
     '''
     Mean Absolute Percentage Error (MAPE) Function
-    
+
     y_true: list/series for actual values and predicted values
     y_pred: mape value 
     '''
@@ -15,13 +16,13 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
 
-def missing_data(input_data):
+def missing_data(input_data: pd.DataFrame) -> pd.DataFrame:
     '''
     This function returns dataframe with information about the percentage of nulls in each column and the column data type.
-    
+
     input: pandas df
     output: pandas df
-    
+
     '''
 
     total = input_data.isnull().sum()
@@ -34,7 +35,8 @@ def missing_data(input_data):
     table["Types"] = types
     return (pd.DataFrame(table))
 
-def iqr_outlier_threshold(df, column):
+
+def iqr_outlier_threshold(df: pd.DataFrame, column: str) -> float:
     ''' Calculates the iqr outlier upper and lower thresholds
 
     input: pandas df, column of the same pandas df
@@ -45,16 +47,26 @@ def iqr_outlier_threshold(df, column):
     lower_threshold = np.quantile(df[column], 0.25) - ((1.5) * (iqr_value))
     upper_threshold = np.quantile(df[column], 0.75) + ((1.5) * (iqr_value))
     print('Outlier threshold calculations:',
-      f'IQR: {iqr_value}', f'Lower threshold:{lower_threshold}', f'Upper threshold: {upper_threshold}')
-    
+          f'IQR: {iqr_value}', f'Lower threshold:{lower_threshold}', f'Upper threshold: {upper_threshold}')
+
     return upper_threshold, lower_threshold
 
-def mean_std_outliers(df, column):
-    mean = df[column].mean()
-    std = df[column].std()
-    cut_off = std*3
-    lower, upper = mean - cut_off, mean + cut_off
+
+def mean_std_outliers(df: pd.DataFrame) -> float:
+    """
+    This function calculates the outlier threshold using the mean and standard deviation method
+
+    input: pandas df
+
+    output: upper threshold, lower threshold
+    """
+
+    z_score = zscore(df)
+    upper_threshold = (z_score > 3).all(axis=1)
+    lower_threshold = (z_score < -2).all(axis=1)
+    upper = df[upper_threshold]
+    lower = df[lower_threshold]
     print('Outlier threshold calculations:',
-           f'Lower threshold:{lower}', f'Upper threshold: {upper}')
-    
+          f'Lower threshold:{lower}', f'Upper threshold: {upper}')
+
     return upper, lower
