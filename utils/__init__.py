@@ -5,4 +5,4 @@ from .preprocess import create_timeseries_features, create_cat_features, add_lag
 from .plot import plot_train_test_split,  plot_time_range, plot_mean_monthly, plot_feature_importance
 
 
-from .train import cross_validation
+from .train import cross_validation, tune_hyperparameters

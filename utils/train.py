@@ -1,4 +1,5 @@
-from pyexpat import model
+import itertools
+import random
 import xgboost as xgb
 import pandas as pd
 import numpy as np
@@ -47,3 +48,57 @@ def cross_validation(df: pd.DataFrame) -> None:
         scores.append(score)
 
         return preds, scores, model_xgb
+
+
+def tune_hyperparameters(df: pd.DataFrame, params: dict, split_date: str, n_iter: int) -> pd.DataFrame:
+    """
+    Tune the hyperparameters of the XGBoost model using a basic grid search
+
+    Args:
+        df (pd.DataFrame): The dataframe to use
+        params (dict): The hyperparameters to tune
+        split_date (str): The date to split the dataset on
+
+    Returns:
+        pd.DataFrame: The results of the hyperparameter tuning
+    """
+    train = df.loc[df.index < split_date]
+    test = df.loc[df.index >= split_date]
+
+    train = create_timeseries_features(train)
+    test = create_timeseries_features(test)
+    target_map = df['PJME_MW'].to_dict()
+    train = add_lags(train, target_map)
+    test = add_lags(test, target_map)
+
+    FEATURES = ['dayofyear', 'hour', 'dayofweek', 'quarter', 'month', 'year',
+                'lag1', 'lag2', 'lag3']
+    TARGET = 'PJME_MW'
+
+    X_train = train[FEATURES]
+    y_train = train[TARGET]
+
+    X_test = test[FEATURES]
+    y_test = test[TARGET]
+
+    keys, values = zip(*params.items())
+    all_combinations = [
+        dict(zip(keys, v)) for v in itertools.product(*values)]
+    random_combinations = random.sample(all_combinations, n_iter)
+    results = []
+
+    for hyperparameters in random_combinations:
+        model_xgb = xgb.XGBRegressor(**hyperparameters)
+        model_xgb.fit(X_train, y_train,
+                      eval_set=[(X_train, y_train), (X_test, y_test)],
+                      verbose=100)
+
+        y_pred = model_xgb.predict(X_test)
+        score = np.sqrt(mean_squared_error(y_test, y_pred))
+
+        results.append({
+            **hyperparameters,
+            'score': score
+        })
+
+    return pd.DataFrame(results)
