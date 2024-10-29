@@ -3,7 +3,7 @@ import random
 import xgboost as xgb
 import pandas as pd
 import numpy as np
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
 from .preprocess import create_timeseries_features, add_lags
 
@@ -88,13 +88,14 @@ def tune_hyperparameters(df: pd.DataFrame, params: dict, split_date: str, n_iter
     results = []
 
     for hyperparameters in random_combinations:
-        model_xgb = xgb.XGBRegressor(**hyperparameters)
+        model_xgb = xgb.XGBRegressor(base_score=0.5, booster='gbtree', early_stopping_rounds=50, objective="reg:linear",
+                                     min_child_weight=1, subsample=0.8, colsample_bytree=0.8, gamma=0, random_state=42, **hyperparameters)
         model_xgb.fit(X_train, y_train,
                       eval_set=[(X_train, y_train), (X_test, y_test)],
                       verbose=100)
 
         y_pred = model_xgb.predict(X_test)
-        score = np.sqrt(mean_squared_error(y_test, y_pred))
+        score = np.sqrt(root_mean_squared_error(y_test, y_pred))
 
         results.append({
             **hyperparameters,
